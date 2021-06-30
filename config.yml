@@ -1,0 +1,50 @@
+config:
+  target: "https://api.trello.com"
+  processor: "../functions.js"
+  environments:
+    functional:
+    # FUNCTIONAL testing profile, just to check the service.
+      phases:
+        - duration: 1
+          arrivalRate: 1
+    load:
+    # LOAD testing profile, simulating the common usage (~360 TPM / 6 TPS).
+      phases:
+        - duration: 5
+          arrivalRate: 2
+    stress:
+    # STRESS testing profile, simulating an usage about 10 times the maximum limit of the Falcon, i.e, 500 TPM x 10 (5000 TPM / ~84 TPS).
+      phases:
+        - duration: 5
+          arrivalRate: 5
+          name: "Warm up phase"
+        - duration: 55
+          arrivalRate: 40
+          name: "Stress phase"
+          maxVusers: 100
+    soak:
+    # SOAK testing profile, simulating endurance conditions, 1 hour requesting 720 TPM (12 TPS).
+      phases:
+        - duration: 3600
+          arrivalRate: 5
+          maxVusers: 5
+          name: "Endurance phase"
+  plugins:
+    expect: {}
+scenarios:
+  - name: 'Nome do cenário'
+    flow:
+      - function: "generateRandomID"
+      # - function: "printStatus"
+      - put:
+          url: "/1/actions/{{randomID}}"
+          # afterResponse: "printStatus"
+          headers:
+            Content-Type: 'application/json'
+          body: '{
+                "text": "text_to_be_changed",
+                "key": "key_value",
+                "token": "token_value'
+          expect:
+            - statusCode: 200
+      - log: "\n{{randomID}}"
